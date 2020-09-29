@@ -1,3 +1,9 @@
+/* 
+ *  Developed by: 
+ *      Bruno Sampaio @brunosampaio08
+ *      Talita Ludmila de Lima @ludmilalima
+ */
+
 #define _GNU_SOURCE
 
 #include <stdio.h>
