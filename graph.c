@@ -17,7 +17,7 @@ graphS createGraph(gType nodeType, uintptr_t nodeCode){
     G->currNode->nextEdge = NULL;
     G->currNode->nodeCode = nodeCode;
     G->currNode->nodeType = nodeType;
-    G->currNode->color = 0;
+    G->currNode->color = branco;
 
     G->nextNode = NULL;
 
@@ -41,7 +41,7 @@ int insertNode(graphS G, gType nodeType, uintptr_t nodeCode){
     aux->nextNode->currNode->nextEdge = NULL;
     aux->nextNode->currNode->nodeCode = nodeCode;
     aux->nextNode->currNode->nodeType = nodeType;
-    aux->nextNode->currNode->color = 0;
+    aux->nextNode->currNode->color = branco;
 
     aux->nextNode->nextNode = NULL;
 
@@ -105,6 +105,7 @@ int dfs(graphS grafo, nodeS vertice)
                     currGraph = currGraph->nextNode;
                 }
                 currGraph->currNode->color = cinza;
+                proxNode->color = cinza;
                 if(dfs(grafo, currGraph->currNode) == 1)
                     return 1;
             }
