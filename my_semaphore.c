@@ -10,12 +10,12 @@
 #include <stdlib.h>
 #include <semaphore.h>
 #include <dlfcn.h>
-#include <stdatomic.h>
+#include <stdint.h>
 
 int (*_sem_init)(sem_t *, int, unsigned int) = NULL;
 int (*_sem_wait)(sem_t *) = NULL;
 int (*_sem_post)(sem_t *) = NULL;
-int (*_sem_getvalue)(sem_t *, int) = NULL;
+int (*_sem_getvalue)(sem_t *, int *) = NULL;
 
 
 /*
@@ -28,16 +28,16 @@ typedef struct nodeT *nodeS;
 
 typedef struct nodeT{
     gType nodeType;
-    int nodeCode;
+    uintptr_t nodeCode;
     nodeS nextEdge;
-};
+}nodeT;
 
 typedef struct graphT *graphS;
 
 typedef struct graphT{
     nodeS currNode;
     graphS nextNode;
-};
+}graphT;
 
 /*
  *  Global Variables Definition
@@ -51,7 +51,7 @@ graphS resourcesGraph = NULL;
 
 
 /* Returns a Graph G with a single node */
-graphS createGraph(gType nodeType, int nodeCode){
+graphS createGraph(gType nodeType, uintptr_t nodeCode){
     graphS G;
 
     G = malloc(sizeof(struct graphT));
@@ -67,7 +67,7 @@ graphS createGraph(gType nodeType, int nodeCode){
 }
 
 /* Inserts a node into an already existing graph G */
-int insertNode(graphS G, gType nodeType, int nodeCode){
+int insertNode(graphS G, gType nodeType, uintptr_t nodeCode){
     graphS aux;
     for(aux = G; aux->nextNode != NULL; aux = aux->nextNode){
         if(aux->currNode->nodeCode == nodeCode){
@@ -91,12 +91,13 @@ int insertNode(graphS G, gType nodeType, int nodeCode){
 }
 
 /* Inserts an edge into an already existing node with code K */
-int insertEdge(graphS G, int nodeCode, gType newNodeType, int newNodeCode){
+int insertEdge(graphS G, gType nodeType, uintptr_t nodeCode, gType newNodeType, uintptr_t newNodeCode){
     graphS auxGraph;
     nodeS auxNode;
 
     //Finds right node for edge insertion
-    for(auxGraph = G; auxGraph->currNode->nodeCode != nodeCode ; auxGraph = auxGraph->nextNode);
+    for(auxGraph = G; (auxGraph->currNode->nodeType != nodeType &&
+        auxGraph->currNode->nodeCode != nodeCode) ; auxGraph = auxGraph->nextNode);
 
     //If node with code nodeCode exists
     if(auxGraph != NULL){
@@ -133,14 +134,15 @@ int sem_init(sem_t *sem, int pshared, unsigned int value){
     printf("\tDentro da sem_init()\n");
 
     if(resourcesGraph == NULL){
-        //Adicionar semaforo para o grafo?
-        resourcesGraph = createGraph(resource, sem);
+        //If global graph hasnt been allocated (is first init call)
+        resourcesGraph = createGraph(resource, (uintptr_t)sem);
     }else{
-        
-        
-        r = _sem_init(sem, pshared, value);
-        return r;
+        //Else global graph has been allocated, just add new node
+        insertNode(resourcesGraph, resource, (uintptr_t)sem);
     }
+
+    r = _sem_init(sem, pshared, value);
+        return r;
 }
 
 int sem_wait(sem_t *sem){
@@ -163,11 +165,27 @@ int sem_post(sem_t *sem){
     for zero, ao incrementar, desbloqueia outras threads/processos que
     estão bloqueados em sem_wait(). */
 
+    int r;
+    if(!_sem_post){
+        _sem_post = dlsym(RTLD_NEXT, "sem_post");
+    }
+
+    printf("\tDentro da sem_post()\n");
+    r = _sem_post(sem);
+    return(r);
 }
 
 int sem_getvalue(sem_t *sem, int *sval){
     /* Copia o valor atual do semáforo apontado em sem para o inteiro
     apontado em sval. Chamada não é bloqueante. */
 
+    int r;
+    if(!_sem_getvalue){
+        _sem_getvalue = dlsym(RTLD_NEXT, "sem_getvalue");
+    }
+
+    printf("\tDentro da sem_getvaue()\n");
+    r = _sem_getvalue(sem, sval);
+    return(r);
 
 }
