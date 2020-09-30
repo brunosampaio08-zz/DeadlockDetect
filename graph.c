@@ -55,7 +55,7 @@ int insertEdge(graphS G, gType nodeType, uintptr_t nodeCode, gType newNodeType, 
     nodeS auxNode;
 
     //Finds right node for edge insertion
-    for(auxGraph = G; (auxGraph->currNode->nodeType != nodeType &&
+    for(auxGraph = G; (auxGraph->currNode->nodeType != nodeType ||
         auxGraph->currNode->nodeCode != nodeCode) ; auxGraph = auxGraph->nextNode);
     
     // auxGraph = G;
@@ -110,6 +110,7 @@ int dfs(graphS grafo, nodeS vertice)
                     return 1;
             }
         }
+        proxNode->color = preto;
     }
     vertice->color = preto;
     return 0;
