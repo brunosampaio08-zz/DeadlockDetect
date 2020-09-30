@@ -17,6 +17,12 @@ int (*_sem_wait)(sem_t *) = NULL;
 int (*_sem_post)(sem_t *) = NULL;
 int (*_sem_getvalue)(sem_t *, int *) = NULL;
 
+// DFS directed graph cycle search functions and defines
+#define cinza -1
+#define branco 0
+#define preto 1
+int dfs(graphS grafo, nodeS vertice);
+int temCiclo(graphS grafo);
 
 /*
  *  Graph Definition
@@ -30,6 +36,7 @@ typedef struct nodeT{
     gType nodeType;
     uintptr_t nodeCode;
     nodeS nextEdge;
+    int color;
 }nodeT;
 
 typedef struct graphT *graphS;
@@ -60,6 +67,7 @@ graphS createGraph(gType nodeType, uintptr_t nodeCode){
     G->currNode->nextEdge = NULL;
     G->currNode->nodeCode = nodeCode;
     G->currNode->nodeType = nodeType;
+    G->currNode->color = 0;
 
     G->nextNode = NULL;
 
@@ -83,6 +91,7 @@ int insertNode(graphS G, gType nodeType, uintptr_t nodeCode){
     aux->nextNode->currNode->nextEdge = NULL;
     aux->nextNode->currNode->nodeCode = nodeCode;
     aux->nextNode->currNode->nodeType = nodeType;
+    aux->nextNode->currNode->color = 0;
 
     aux->nextNode->nextNode = NULL;
 
@@ -188,4 +197,54 @@ int sem_getvalue(sem_t *sem, int *sval){
     r = _sem_getvalue(sem, sval);
     return(r);
 
+}
+
+int dfs(graphS grafo, nodeS vertice)
+{
+    nodeS proxNode;
+    graphS currGraph;
+    int cor;
+    for(proxNode = vertice->nextEdge; proxNode != NULL; proxNode = proxNode->nextEdge)
+    {
+        cor = proxNode->color;
+        if(cor != preto)
+        {
+            if(cor == cinza)
+                return 1;
+            else
+            {
+                currGraph = grafo;
+                while (currGraph->currNode->nodeCode != proxNode->nodeCode)
+                {
+                    currGraph = currGraph->nextNode;
+                }
+                currGraph->currNode->color = cinza;
+                if(dfs(grafo, currGraph->currNode) == 1)
+                    return 1;
+            }
+        }
+    }
+    vertice->color = preto;
+    return 0;
+}
+
+int temCiclo(graphS grafo)
+{
+    graphS currGraph;
+
+    for(currGraph = grafo; currGraph != NULL; currGraph = currGraph->nextNode)
+    {
+        currGraph->currNode->color = branco;
+    }
+
+    for(currGraph = grafo; currGraph != NULL; currGraph = currGraph->nextNode)
+    {
+        if(currGraph->currNode->color != preto)
+        {
+            currGraph->currNode->color = cinza;
+            if(dfs(grafo, currGraph->currNode) == 1)
+                return 1;
+        }
+    }
+    return 0;
 }
