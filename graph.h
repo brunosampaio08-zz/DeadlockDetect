@@ -68,6 +68,9 @@ void removeAllEdges(graphS G, gType nodeType, uintptr_t nodeCode);
 /* Finds the next node that contains and edge with type and code that match */
 graphS findNextEdge(graphS G, gType nodeType, uintptr_t nodeCode);
 
+/* Prints fiven graph */
+void printGraph(graphS G);
+
 /* Checks if grasph grafo has a cycle */
 int temCiclo(graphS grafo);
 

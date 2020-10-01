@@ -185,6 +185,19 @@ graphS findNextEdge(graphS G, gType nodeType, uintptr_t nodeCode){
     return NULL;
 }
 
+void printGraph(graphS G){
+    graphS auxGraph;
+    nodeS auxNode;
+    printf("-------------GRAPH-----------\n\n");
+    for(auxGraph = G; auxGraph != NULL; auxGraph = auxGraph->nextNode){
+        for(auxNode = auxGraph->currNode; auxNode != NULL; auxNode = auxNode->nextEdge){
+            printf("%lu -> ", auxNode->nodeCode);
+        }
+        printf("NULL\n");
+    }
+    printf("--------------END GRAPH------\n\n");
+}
+
 /* Depth-first search in graph grafo */
 int dfs(graphS grafo, nodeS vertice)
 {

@@ -13,7 +13,8 @@ int main(){
     insertEdge(G, proccess, 3, proccess, 2);
     insertEdge(G, proccess, 2, proccess, 4);
     insertEdge(G, proccess, 4, proccess, 3);
-    removeEdge(G, proccess, 1, proccess, 2);
+    //removeEdge(G, proccess, 1, proccess, 2);
+    printGraph(G);
 
     int k = temCiclo(G);
 
