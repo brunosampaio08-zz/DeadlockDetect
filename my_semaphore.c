@@ -85,25 +85,24 @@ int sem_wait(sem_t *sem){
     uintptr_t resourceID = (uintptr_t)sem;
     uintptr_t proccessID = (uintptr_t)pthread_self();
 
-    // if(!_sem_wait){
-    //     _sem_wait = dlsym(RTLD_NEXT, "sem_wait");
-    // }
-
     _sem_wait(&graphSem);
     if(!checkNodeExists(resourcesGraph, proccess, proccessID)){
         insertNode(resourcesGraph, proccess, proccessID);
     }
 
     insertEdge(resourcesGraph, proccess, proccessID, resource, resourceID);
+    printGraph(resourcesGraph);
+    printf("\n\n---->%d<------\n\n", temCiclo(resourcesGraph));
     if(temCiclo(resourcesGraph)){
         printf("Erro! DEADLOCK!");
         exit(-2);
     }else{
-        removeEdge(resourcesGraph, proccess, proccessID, resource, resourceID);
-        insertEdge(resourcesGraph, resource, resourceID, proccess, proccessID);
-        printGraph(resourcesGraph);
         _sem_post(&graphSem);
         r = _sem_wait(sem);
+        _sem_wait(&graphSem);
+        removeEdge(resourcesGraph, proccess, proccessID, resource, resourceID);
+        insertEdge(resourcesGraph, resource, resourceID, proccess, proccessID);
+        _sem_post(&graphSem);
         return r;
     }
 }
@@ -116,12 +115,10 @@ int sem_post(sem_t *sem){
     int r;
     uintptr_t resourceID = (uintptr_t)sem;
     uintptr_t proccessID = (uintptr_t)pthread_self();
-    
-    // if(!_sem_post){
-    //     _sem_post = dlsym(RTLD_NEXT, "sem_post");
-    // }
 
+    _sem_wait(&graphSem);
     removeEdge(resourcesGraph, resource, resourceID, proccess, proccessID);
+    _sem_post(&graphSem);
 
     r = _sem_post(sem);
     return r;
@@ -132,9 +129,6 @@ int sem_post(sem_t *sem){
 int sem_getvalue(sem_t *sem, int *sval){
 
     int r;
-    // if(!_sem_getvalue){
-    //     _sem_getvalue = dlsym(RTLD_NEXT, "sem_getvalue");
-    // }
 
     printf("\tDentro da sem_getvaue()\n");
     r = _sem_getvalue(sem, sval);
