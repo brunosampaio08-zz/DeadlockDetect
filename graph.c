@@ -84,6 +84,107 @@ int insertEdge(graphS G, gType nodeType, uintptr_t nodeCode, gType newNodeType, 
     }
 }
 
+/* Checks if a node already exists */
+int checkNodeExists(graphS G, gType nodeType, uintptr_t nodeCode){
+    graphS aux;
+    for(aux = G; aux != NULL; aux = aux->nextNode){
+        if(aux->currNode->nodeCode == nodeCode && aux->currNode->nodeType == nodeType){
+            //node exists
+            return 1;
+        }
+    }
+
+    //node doesnt exist
+    return 0;
+}
+
+/* Remove given edge from given node */
+void removeEdge(graphS G, gType nodeType, uintptr_t nodeCode, gType edgeType, uintptr_t edgeCode){
+    graphS auxGraph;
+    nodeS auxNode;
+    //Finds right node
+    for(auxGraph = G; auxGraph != NULL && (auxGraph->currNode->nodeType != nodeType ||
+        auxGraph->currNode->nodeCode != nodeCode); auxGraph = auxGraph->nextNode);
+    
+    if(auxGraph != NULL)
+    {
+        //Finds right edge if node exists (next edge is to be removed)
+        nodeS toRemoveEdge;
+        for(auxNode = auxGraph->currNode; auxNode->nextEdge != NULL && (
+            auxNode->nextEdge->nodeType != edgeType || auxNode->nextEdge->nodeCode != edgeCode); 
+                auxNode = auxNode->nextEdge);
+
+        toRemoveEdge = auxNode->nextEdge;
+
+        if(auxNode->nextEdge != NULL){
+            //If edge exists
+            if(toRemoveEdge->nextEdge == NULL){
+                //If its the last edge
+                auxNode->nextEdge = NULL;
+            }else{
+                //If its not the last edge
+                auxNode->nextEdge = toRemoveEdge->nextEdge;
+            }
+        }
+    }
+
+}
+
+/* Removes given node from graph */
+graphS removeNode(graphS G, gType nodeType, uintptr_t nodeCode){
+    graphS aux;
+    if(G->currNode->nodeType == nodeType && G->currNode->nodeCode == nodeCode){
+        return G->nextNode;
+    }else{   
+        for(aux = G; aux->nextNode != NULL && (aux->nextNode->currNode->nodeType != nodeType || 
+            aux->nextNode->currNode->nodeCode != nodeCode); aux = aux->nextNode);
+
+        graphS tobeRemovedNode = aux->nextNode;
+        if(tobeRemovedNode != NULL){
+            if(tobeRemovedNode->nextNode == NULL){
+                aux->nextNode = NULL;
+            }else{
+                aux->nextNode = tobeRemovedNode->nextNode;
+            }
+        }
+    }
+    return G;
+}
+
+/* Finds and returns given node from graph */
+graphS findNode(graphS G, gType nodeType, uintptr_t nodeCode){
+    graphS aux;
+    for(aux = G; aux != NULL && (aux->currNode->nodeType != nodeType || 
+        aux->currNode->nodeCode != nodeCode); aux = aux->nextNode);
+
+    return aux;
+}
+
+/* Remove all edges that match given type and code */
+void removeAllEdges(graphS G, gType nodeType, uintptr_t nodeCode){
+    graphS auxGraph;
+
+    for(auxGraph = G; auxGraph != NULL; auxGraph = auxGraph->nextNode){
+        removeEdge(G, auxGraph->currNode->nodeType, auxGraph->currNode->nodeCode, nodeType, nodeCode);
+    }
+}
+
+/* Finds the next node that contains and edge with type and code that match */
+graphS findNextEdge(graphS G, gType nodeType, uintptr_t nodeCode){
+    graphS auxGraph;
+    nodeS auxNode;
+
+    for(auxGraph = G; auxGraph != NULL; auxGraph = auxGraph->nextNode){
+        for(auxNode = auxGraph->currNode; auxNode != NULL; auxNode = auxNode->nextEdge){
+            if(auxNode->nodeType == nodeType && auxNode->nodeCode == nodeCode){
+                return auxGraph;
+            }
+        }
+    }
+
+    return NULL;
+}
+
 /* Depth-first search in graph grafo */
 int dfs(graphS grafo, nodeS vertice)
 {
