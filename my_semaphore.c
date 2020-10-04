@@ -29,7 +29,6 @@ int (*_sem_getvalue)(sem_t *, int *) = NULL;
 
 graphS resourcesGraph = NULL;
 sem_t graphSem;
-int sleepTime = 50;
 
 /* Inicializa o semáforo apontado em sem, indicando seu valor inicial
     especificado em value. O argumento pshared indica se o semáforo será
@@ -60,14 +59,12 @@ int sem_init(sem_t *sem, int pshared, unsigned int value){
         _sem_wait(&graphSem);
         //If global graph hasnt been allocated (is first init call)
         resourcesGraph = createGraph(resource, resourceID);
-        printGraph(resourcesGraph);
         _sem_post(&graphSem);
 
     }else{
         //Else global graph has been allocated, just add new node
         _sem_wait(&graphSem);
         insertNode(resourcesGraph, resource, resourceID);
-        printGraph(resourcesGraph);
         _sem_post(&graphSem);
     }
 
@@ -85,23 +82,35 @@ int sem_wait(sem_t *sem){
     uintptr_t resourceID = (uintptr_t)sem;
     uintptr_t proccessID = (uintptr_t)pthread_self();
 
+    //Requests access to graph semaphore
     _sem_wait(&graphSem);
+    
+    //Proccess node has already been inserted?
     if(!checkNodeExists(resourcesGraph, proccess, proccessID)){
+        //If false: inserts it
         insertNode(resourcesGraph, proccess, proccessID);
     }
 
+    //If true no need to insert it: just insert request to resource edge (proccess->resource)
     insertEdge(resourcesGraph, proccess, proccessID, resource, resourceID);
-    printGraph(resourcesGraph);
-    printf("\n\n---->%d<------\n\n", temCiclo(resourcesGraph));
+    //With request added: is there a cycle?
     if(temCiclo(resourcesGraph)){
-        printf("Erro! DEADLOCK!");
+        //If true: deadlock occurred!
+        printGraph(resourcesGraph);
+        printf("Erro! DEADLOCK!\n");
         exit(-2);
     }else{
+        //If false: Releases graph semaphore
         _sem_post(&graphSem);
+        //Requests access to resource
         r = _sem_wait(sem);
+        //If access has been granted: Requests access do graph semaphore
         _sem_wait(&graphSem);
+        //Removes resquest edge (proccess->resource)
         removeEdge(resourcesGraph, proccess, proccessID, resource, resourceID);
+        //Inserts allocation edge (resource->proccess)
         insertEdge(resourcesGraph, resource, resourceID, proccess, proccessID);
+        //Releases graph semaphore
         _sem_post(&graphSem);
         return r;
     }
@@ -116,10 +125,14 @@ int sem_post(sem_t *sem){
     uintptr_t resourceID = (uintptr_t)sem;
     uintptr_t proccessID = (uintptr_t)pthread_self();
 
+    //Requests access to graph semaphore
     _sem_wait(&graphSem);
+    //Removes resource allocation edge
     removeEdge(resourcesGraph, resource, resourceID, proccess, proccessID);
     _sem_post(&graphSem);
+    //Releases graph semaphore
 
+    //Releases resource semaphore
     r = _sem_post(sem);
     return r;
 }

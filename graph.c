@@ -234,10 +234,13 @@ int dfs(graphS grafo, nodeS vertice)
 int temCiclo(graphS grafo)
 {
     graphS currGraph;
+    nodeS currNode;
 
     for(currGraph = grafo; currGraph != NULL; currGraph = currGraph->nextNode)
     {
-        currGraph->currNode->color = branco;
+        for(currNode = currGraph->currNode; currNode != NULL; currNode = currNode->nextEdge){
+            currNode->color = branco;
+        }
     }
 
     for(currGraph = grafo; currGraph != NULL; currGraph = currGraph->nextNode)
